@@ -1,0 +1,9 @@
+.preview-canvas {
+    left: 50vw;
+    top: 50vh;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background-color: #ff00dd;
+    image-rendering: pixelated;
+    border-radius: 5px;
+}
