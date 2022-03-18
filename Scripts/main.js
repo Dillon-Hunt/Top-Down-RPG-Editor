@@ -8,6 +8,8 @@ var map = {
     }
 }
 
+// To Do add tile picker (i) and number for tiles and other types of gameobjects
+
 
 document.querySelector(".preview-canvas").width = 32 * 30
 document.querySelector(".preview-canvas").height = 32 * 20
@@ -29,6 +31,12 @@ function addTile(event) {
         } else {
             delete map.tiles[key]
         }
+    } else if (event.altKey) {
+        Object.keys(map.tiles).forEach(tileKey => {
+            if (tileKey.includes(key.replace(`-${selection.layer}`, ""))) {
+                selection = map.tiles[tileKey]
+            }
+        })
     } else {
         if (selection.layer === undefined) {
             selection.position.x = clicked[0] * 16
@@ -38,14 +46,11 @@ function addTile(event) {
             map.tiles[key] = selection
         }
     }
-    draw()
 }
 
-let delay = 0
-
-document.querySelector(".preview-canvas").addEventListener("mousedown", () => {
+document.querySelector(".preview-canvas").addEventListener("mousedown", (event) => {
+    addTile(event)
     isMouseDown = true
-    delay = 0
 })
 
 document.querySelector(".preview-canvas").addEventListener("mouseup", () => {
@@ -56,16 +61,9 @@ document.querySelector(".preview-canvas").addEventListener("mouseleave", () => {
     isMouseDown = false
 })
 
-document.querySelector(".preview-canvas").addEventListener("mousedown", addTile)
-
 document.querySelector(".preview-canvas").addEventListener("mousemove", event => {
     if (isMouseDown) {
-        if (delay < 1) {
-            addTile(event)
-            delay = 5
-        } else {
-            delay--
-        }
+        addTile(event)
     }
 })
 
@@ -73,7 +71,7 @@ document.querySelector(".barrier").addEventListener("mousedown", () => {
     selection = {
         src: "/Assets/Tiles/barrier.png",
         type: "barrier",
-        layer: "top"
+        layer: "bottom"
     }
 })
 
@@ -81,7 +79,7 @@ document.querySelector(".grass").addEventListener("mousedown", () => {
     selection = {
         src: "/Assets/Tiles/grass.png",
         type: "grass",
-        layer: "floor"
+        layer: "bottom"
     }
 })
 
@@ -89,6 +87,70 @@ document.querySelector(".path").addEventListener("mousedown", () => {
     selection = {
         src: "/Assets/Tiles/path.png",
         type: "path",
+        layer: "floor"
+    }
+})
+
+document.querySelector(".path-top").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path-top.png",
+        type: "path-top",
+        layer: "floor"
+    }
+})
+
+document.querySelector(".path-top-left").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path-top-left.png",
+        type: "path-top-left",
+        layer: "floor"
+    }
+})
+
+document.querySelector(".path-bottom-left-corner").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path-bottom-left-corner.png",
+        type: "path-bottom-left-corner",
+        layer: "floor"
+    }
+})
+
+document.querySelector(".path-top-right-corner").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path-top-right-corner.png",
+        type: "path-top-right-corner",
+        layer: "floor"
+    }
+})
+
+document.querySelector(".path-right").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path-right.png",
+        type: "path-right",
+        layer: "floor"
+    }
+})
+
+document.querySelector(".path-left").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path-left.png",
+        type: "path-left",
+        layer: "floor"
+    }
+})
+
+document.querySelector(".path-bottom-left").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path-bottom-left.png",
+        type: "path-bottom-left",
+        layer: "floor"
+    }
+})
+
+document.querySelector(".path-bottom").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path-bottom.png",
+        type: "path-bottom",
         layer: "floor"
     }
 })
@@ -105,7 +167,17 @@ document.querySelector(".character").addEventListener("mousedown", () => {
         },
         src: "/Assets/Sprites/player-large.png"
     }
-})
+});
+
+(() => {
+    const step = () => {
+        draw()
+        setTimeout(() => {
+            step()
+        }, 200)
+    }
+    step()
+})()
 
 function getCoords(e) {
    const { x, y } = e.target.getBoundingClientRect()
@@ -153,7 +225,7 @@ json += `${tab}}`
 }
 
 function draw() {
-    var ctx = document.querySelector(".preview-canvas").getContext("2d")
+    let ctx = document.querySelector(".preview-canvas").getContext("2d")
     ctx.clearRect(0, 0, document.querySelector(".preview-canvas").width, document.querySelector(".preview-canvas").height)
     Object.values(layers).forEach(layer => {
         if (layer === "gameObjects") {
@@ -170,15 +242,16 @@ function draw() {
             })
         } else {
             Object.keys(map.tiles).forEach(key => { 
-                var x = Number(key.split("-")[0])
-                var y = Number(key.split("-")[1])
-                var image = new Image()
-                image.src = map.tiles[key].src
-                ctx.drawImage(
-                   image,
-                   x * 32,
-                   y * 32,
-                )
+                if (map.tiles[key].layer === layer) {
+                    let [ x, y ] = key.split("-")
+                    let image = new Image()
+                    image.src = map.tiles[key].src
+                    ctx.drawImage(
+                    image,
+                    x * 32,
+                    y * 32,
+                    )
+                }
             })
         }
    })
