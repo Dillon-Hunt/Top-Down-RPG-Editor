@@ -19,31 +19,69 @@ var selection = {
     type: "grass",
     layer: "floor"
 }
+
 var isMouseDown = false
 var layers = ["bottom", "floor", "middle", "gameObjects", "top"]
 
 function addTile(event) {
     var clicked = getCoords(event)
-    var key = clicked[0] + "-" + clicked[1] + "-" + (selection.layer || "")
-    if (event.shiftKey) {
-        if (selection.layer === undefined) {
-            delete map.gameObjects[selection.id]
-        } else {
-            delete map.tiles[key]
-        }
-    } else if (event.altKey) {
-        Object.keys(map.tiles).forEach(tileKey => {
-            if (tileKey.includes(key.replace(`-${selection.layer}`, ""))) {
-                selection = map.tiles[tileKey]
+    var key = clicked[0] + "-" + clicked[1] + "-" + (selection.layer || selection.type)
+
+    if (selection.type === "log" || selection.type === "rock") {
+        selection = {
+            "id": key,
+            "type": "log",
+            "directions": selection.directions,
+            "moveable": selection.moveable,
+            "breakable": selection.breakable,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "facing": "down"
+            },
+            "src": selection.src
+          }
+    } else if (selection.type === "character") {
+        selection = {
+            "id": key,
+            "type": "character",
+            "playerControlled": selection.playerControlled,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "facing": "down"
+            },
+            "src": selection.src
+          }
+    }
+    
+    if (selection != null) {
+        console.log(key)
+        if (event.shiftKey) {
+            if (selection.layer === undefined) {
+                delete map.gameObjects[key]
+            } else {
+                delete map.tiles[key]
             }
-        })
-    } else {
-        if (selection.layer === undefined) {
-            selection.position.x = clicked[0] * 16
-            selection.position.y = clicked[1] * 16
-            map.gameObjects[selection.id] = selection
+        } else if (event.altKey) {
+            Object.keys(map.tiles).forEach(tileKey => {
+                if (tileKey.includes(key.replace(`-${selection.layer}`, ""))) {
+                    selection = map.tiles[tileKey]
+                }
+            })
+            Object.keys(map.tiles).forEach(tileKey => {
+                if (tileKey.includes(key.replace(`-${selection.type}`, ""))) {
+                    selection = map.tiles[tileKey]
+                }
+            })
         } else {
-            map.tiles[key] = selection
+            if (selection.layer === undefined) {
+                selection.position.x = clicked[0] * 16
+                selection.position.y = clicked[1] * 16
+                map.gameObjects[key] = selection
+            } else {
+                map.tiles[key] = selection
+            }
         }
     }
 }
@@ -91,6 +129,14 @@ document.querySelector(".path").addEventListener("mousedown", () => {
     }
 })
 
+document.querySelector(".path").addEventListener("mousedown", () => {
+    selection = {
+        src: "/Assets/Tiles/path.png",
+        type: "path",
+        layer: "floor"
+    }
+})
+/* 
 document.querySelector(".path-top").addEventListener("mousedown", () => {
     selection = {
         src: "/Assets/Tiles/path-top.png",
@@ -153,7 +199,7 @@ document.querySelector(".path-bottom").addEventListener("mousedown", () => {
         type: "path-bottom",
         layer: "floor"
     }
-})
+}) */
 
 document.querySelector(".character").addEventListener("mousedown", () => {
     selection = {
@@ -165,7 +211,85 @@ document.querySelector(".character").addEventListener("mousedown", () => {
             y: 0,
             facing: "down"
         },
-        src: "/Assets/Sprites/player-large.png"
+        src: "/Assets/Sprites/player.png"
+    }
+})
+
+
+document.querySelector(".log-vertical").addEventListener("mousedown", () => {
+    selection = {
+        id: "log",
+        type: "log",
+        directions: ["up", "down"],
+        moveable: true,
+        position: {
+            x: 0,
+            y: 0,
+            facing: "down"
+        },
+        src: "/Assets/Tiles/log-vertical.png"
+    }
+})
+
+document.querySelector(".log-horizontal").addEventListener("mousedown", () => {
+    selection = {
+        id: "log",
+        type: "log",
+        directions: ["left", "right"],
+        moveable: true,
+        position: {
+            x: 0,
+            y: 0,
+            facing: "down"
+        },
+        src: "/Assets/Tiles/log-horizontal.png"
+    }
+})
+
+document.querySelector(".rock").addEventListener("mousedown", () => {
+    selection = {
+        id: "rock",
+        type: "rock",
+        directions: ["left", "right", "up", "down"],
+        moveable: true,
+        position: {
+            x: 0,
+            y: 0,
+            facing: "down"
+        },
+        src: "/Assets/Tiles/rock.png"
+    }
+})
+
+document.querySelector(".large-rock").addEventListener("mousedown", () => {
+    selection = {
+        id: "large-rock",
+        type: "rock",
+        directions: [],
+        moveable: false,
+        breakable: document.querySelector(".breakable").checked,
+        position: {
+            x: 0,
+            y: 0,
+            facing: "down"
+        },
+        src: "/Assets/Tiles/large-rock.png"
+    }
+})
+
+document.querySelector(".stump").addEventListener("mousedown", () => {
+    selection = {
+        id: "stump",
+        type: "log",
+        directions: [],
+        moveable: false,
+        breakable: document.querySelector(".breakable").checked,
+        position: {
+            x: 0,
+            y: 0,
+            facing: "down"
+        },
+        src: "/Assets/Tiles/stump.png"
     }
 });
 
@@ -188,8 +312,8 @@ function getCoords(e) {
 
 function exportData() {
     tab = "    "
-    var json = 
-`{
+    var json = JSON.stringify(map)
+/* `{
 ${tab}"id": "${map.id}",
 ${tab}"gameObjects": {\n`
     Object.keys(map.gameObjects).forEach(key => {
@@ -220,7 +344,7 @@ ${tab}${tab}},
 `
     })
 json += `${tab}}`
-    json += `\n}`
+    json += `\n}` */
     console.log(json)
 }
 
@@ -238,6 +362,8 @@ function draw() {
                     image,
                     x * 2,
                     y * 2,
+                    32,
+                    32
                 )
             })
         } else {
@@ -250,6 +376,8 @@ function draw() {
                     image,
                     x * 32,
                     y * 32,
+                    32,
+                    32
                     )
                 }
             })
