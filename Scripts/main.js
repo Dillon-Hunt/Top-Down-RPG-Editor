@@ -1,19 +1,160 @@
-var map = {
+// Map
+let map = {
     id: "NewMap",
     gameObjects: {
-
+        
     },
     tiles: {
-
+        
     }
 }
 
-// To Do add tile picker (i) and number for tiles and other types of gameobjects
+// Variables
+let isMouseDown = false
+let layers = ["bottom", "floor", "middle", "gameObject", "top"]
+let SelectedLayer = "floor"
+const tileSize = 24
+
+let width = 30
+let height = 20
+
+selection = {
+    x: 3, 
+    y: 4
+}
+
+// Canvas Setup
+document.querySelector(".preview-canvas").width = tileSize * width
+document.querySelector(".preview-canvas").height = tileSize * height
+document.querySelector(".tile-canvas").width = tileSize * 10
+document.querySelector(".tile-canvas").height = tileSize * 6
+let previewCTX = document.querySelector(".preview-canvas").getContext("2d")
+let tileCTX = document.querySelector(".tile-canvas").getContext("2d")
+
+// Init
+let tileset = new Image()
+
+tileset.src ="./Assets/Tiles/tileset.png"
+
+tileset.onload = () => {
+    tileCTX.drawImage(
+        tileset,
+        0, 
+        0, 
+        tileSize * 10,
+        tileSize * 10
+    )
+}
+
+// Functions
+function getCoords(e) {
+    const { x, y } = e.target.getBoundingClientRect()
+    const mouseX = e.clientX - x
+    const mouseY = e.clientY - y
+    return { x: Math.floor(mouseX / tileSize), y: Math.floor(mouseY / tileSize) }
+}
+
+function selectTile(event) {
+    selection = getCoords(event)
+}
+
+function addTile(event) {
+    let currentSelection = getCoords(event)
+
+    SelectedLayer = document.querySelector("input[name='radio']:checked").value
+
+    let key = currentSelection.x + "-" + currentSelection.y + "-" + SelectedLayer
+
+    if (event.shiftKey) {
+        if (SelectedLayer === "gameObject") {
+            //delete map.gameObjects[key]
+        } else {
+            delete map.tiles[key]
+        }
+    } else {
+        if (SelectedLayer === "gameObject") {
+
+        } else {
+            map.tiles[key] = {
+                frame: {
+                    x: selection.x, 
+                    y: selection.y
+                },
+                position: {
+                    x: currentSelection.x, 
+                    y: currentSelection.y
+                }
+            }
+        }
+    }
+
+    drawTiles()
+}
+
+function drawTiles() {
+    previewCTX.clearRect(0, 0, document.querySelector(".preview-canvas").width, document.querySelector(".preview-canvas").height)
+    
+    layers.forEach(layer => {
+        if (layer === "gameObject") {
+            // ...
+        } else { 
+            tiles = Object.keys(map.tiles).filter(tile => tile.includes(layer))
+
+            tiles.forEach(tile => {
+                previewCTX.drawImage(
+                    tileset,
+                    map.tiles[tile].frame.x * tileSize, 
+                    map.tiles[tile].frame.y * tileSize,
+                    tileSize, 
+                    tileSize,
+                    map.tiles[tile].position.x * tileSize,
+                    map.tiles[tile].position.y * tileSize,
+                    tileSize,
+                    tileSize
+                )
+            })
+        }
+    })
+}
+
+// Listeners
+document.querySelector(".tile-canvas").addEventListener("click", (event) => {
+    selectTile(event)
+})
+
+document.querySelector(".increase-width").onclick = () => {
+    width++
+    document.querySelector(".preview-canvas").width = tileSize * width
+    drawTiles()
+}
+
+document.querySelector(".increase-height").onclick = () => {
+    height++
+    document.querySelector(".preview-canvas").height = tileSize * height
+    drawTiles()
+}
+
+document.querySelector(".preview-canvas").addEventListener("mousedown", (event) => {
+    addTile(event)
+    isMouseDown = true
+})
+
+document.querySelector(".preview-canvas").addEventListener("mouseup", () => {
+    isMouseDown = false
+})
+
+document.querySelector(".preview-canvas").addEventListener("mouseleave", () => {
+    isMouseDown = false
+})
+
+document.querySelector(".preview-canvas").addEventListener("mousemove", event => {
+    if (isMouseDown) {
+        addTile(event)
+    }
+})
 
 
-document.querySelector(".preview-canvas").width = 32 * 30
-document.querySelector(".preview-canvas").height = 32 * 20
-
+/* 
 var selection = {
     src: "/Assets/Tiles/grass.png",
     type: "grass",
@@ -26,34 +167,6 @@ var layers = ["bottom", "floor", "middle", "gameObjects", "top"]
 function addTile(event) {
     var clicked = getCoords(event)
     var key = clicked[0] + "-" + clicked[1] + "-" + (selection.layer || selection.type)
-
-    if (selection.type === "log" || selection.type === "rock") {
-        selection = {
-            "id": key,
-            "type": "log",
-            "directions": selection.directions,
-            "moveable": selection.moveable,
-            "breakable": selection.breakable,
-            "position": {
-              "x": 0,
-              "y": 0,
-              "facing": "down"
-            },
-            "src": selection.src
-          }
-    } else if (selection.type === "character") {
-        selection = {
-            "id": key,
-            "type": "character",
-            "playerControlled": selection.playerControlled,
-            "position": {
-              "x": 0,
-              "y": 0,
-              "facing": "down"
-            },
-            "src": selection.src
-          }
-    }
     
     if (selection != null) {
         console.log(key)
@@ -86,212 +199,6 @@ function addTile(event) {
     }
 }
 
-document.querySelector(".preview-canvas").addEventListener("mousedown", (event) => {
-    addTile(event)
-    isMouseDown = true
-})
-
-document.querySelector(".preview-canvas").addEventListener("mouseup", () => {
-    isMouseDown = false
-})
-
-document.querySelector(".preview-canvas").addEventListener("mouseleave", () => {
-    isMouseDown = false
-})
-
-document.querySelector(".preview-canvas").addEventListener("mousemove", event => {
-    if (isMouseDown) {
-        addTile(event)
-    }
-})
-
-document.querySelector(".barrier").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/barrier.png",
-        type: "barrier",
-        layer: "bottom"
-    }
-})
-
-document.querySelector(".grass").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/grass.png",
-        type: "grass",
-        layer: "bottom"
-    }
-})
-
-document.querySelector(".path").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path.png",
-        type: "path",
-        layer: "floor"
-    }
-})
-
-document.querySelector(".path").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path.png",
-        type: "path",
-        layer: "floor"
-    }
-})
-/* 
-document.querySelector(".path-top").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path-top.png",
-        type: "path-top",
-        layer: "floor"
-    }
-})
-
-document.querySelector(".path-top-left").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path-top-left.png",
-        type: "path-top-left",
-        layer: "floor"
-    }
-})
-
-document.querySelector(".path-bottom-left-corner").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path-bottom-left-corner.png",
-        type: "path-bottom-left-corner",
-        layer: "floor"
-    }
-})
-
-document.querySelector(".path-top-right-corner").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path-top-right-corner.png",
-        type: "path-top-right-corner",
-        layer: "floor"
-    }
-})
-
-document.querySelector(".path-right").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path-right.png",
-        type: "path-right",
-        layer: "floor"
-    }
-})
-
-document.querySelector(".path-left").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path-left.png",
-        type: "path-left",
-        layer: "floor"
-    }
-})
-
-document.querySelector(".path-bottom-left").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path-bottom-left.png",
-        type: "path-bottom-left",
-        layer: "floor"
-    }
-})
-
-document.querySelector(".path-bottom").addEventListener("mousedown", () => {
-    selection = {
-        src: "/Assets/Tiles/path-bottom.png",
-        type: "path-bottom",
-        layer: "floor"
-    }
-}) */
-
-document.querySelector(".character").addEventListener("mousedown", () => {
-    selection = {
-        id: "player",
-        type: "character",
-        playerControlled: true,
-        position: {
-            x: 0,
-            y: 0,
-            facing: "down"
-        },
-        src: "/Assets/Sprites/player.png"
-    }
-})
-
-
-document.querySelector(".log-vertical").addEventListener("mousedown", () => {
-    selection = {
-        id: "log",
-        type: "log",
-        directions: ["up", "down"],
-        moveable: true,
-        position: {
-            x: 0,
-            y: 0,
-            facing: "down"
-        },
-        src: "/Assets/Tiles/log-vertical.png"
-    }
-})
-
-document.querySelector(".log-horizontal").addEventListener("mousedown", () => {
-    selection = {
-        id: "log",
-        type: "log",
-        directions: ["left", "right"],
-        moveable: true,
-        position: {
-            x: 0,
-            y: 0,
-            facing: "down"
-        },
-        src: "/Assets/Tiles/log-horizontal.png"
-    }
-})
-
-document.querySelector(".rock").addEventListener("mousedown", () => {
-    selection = {
-        id: "rock",
-        type: "rock",
-        directions: ["left", "right", "up", "down"],
-        moveable: true,
-        position: {
-            x: 0,
-            y: 0,
-            facing: "down"
-        },
-        src: "/Assets/Tiles/rock.png"
-    }
-})
-
-document.querySelector(".large-rock").addEventListener("mousedown", () => {
-    selection = {
-        id: "large-rock",
-        type: "rock",
-        directions: [],
-        moveable: false,
-        breakable: document.querySelector(".breakable").checked,
-        position: {
-            x: 0,
-            y: 0,
-            facing: "down"
-        },
-        src: "/Assets/Tiles/large-rock.png"
-    }
-})
-
-document.querySelector(".stump").addEventListener("mousedown", () => {
-    selection = {
-        id: "stump",
-        type: "log",
-        directions: [],
-        moveable: false,
-        breakable: document.querySelector(".breakable").checked,
-        position: {
-            x: 0,
-            y: 0,
-            facing: "down"
-        },
-        src: "/Assets/Tiles/stump.png"
-    }
-});
 
 (() => {
     const step = () => {
@@ -344,10 +251,10 @@ ${tab}${tab}},
 `
     })
 json += `${tab}}`
-    json += `\n}` */
+    json += `\n}`
     console.log(json)
 }
-
+ 
 function draw() {
     let ctx = document.querySelector(".preview-canvas").getContext("2d")
     ctx.clearRect(0, 0, document.querySelector(".preview-canvas").width, document.querySelector(".preview-canvas").height)
@@ -383,4 +290,4 @@ function draw() {
             })
         }
    })
-}
+} */
