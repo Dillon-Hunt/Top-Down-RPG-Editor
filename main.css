@@ -57,3 +57,9 @@
     border-radius: 80%;
     background: white;
 }
+
+.gameObject {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+}
